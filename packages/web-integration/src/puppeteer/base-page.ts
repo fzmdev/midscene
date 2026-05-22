@@ -466,15 +466,15 @@ export class Page<
       await this.evaluate(
         ([q, total]: [number, number]) =>
           new Promise<void>((resolve) => {
-            let settleTimer: ReturnType<typeof setTimeout>;
+            let settleTimer: ReturnType<typeof setTimeout> | undefined;
             const done = () => {
               obs.disconnect();
               clearTimeout(hardTimer);
-              clearTimeout(settleTimer);
+              if (settleTimer) clearTimeout(settleTimer);
               resolve();
             };
             const obs = new MutationObserver(() => {
-              clearTimeout(settleTimer);
+              if (settleTimer) clearTimeout(settleTimer);
               settleTimer = setTimeout(done, q);
             });
             obs.observe(document.body, {
@@ -484,7 +484,6 @@ export class Page<
               characterData: true,
             });
             const hardTimer = setTimeout(done, total);
-            settleTimer = setTimeout(done, q);
           }),
         [quietMs, timeoutMs],
       );
